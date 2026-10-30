@@ -7,25 +7,6 @@ local lag_histogram = monitoring.histogram("lag", "lag histogram",
   {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0})
 
 
-local function explode(sep, input)
-		local t={}
-		local i=0
-		for k in string.gmatch(input,"([^"..sep.."]+)") do
-			t[i]=k
-			i=i+1
-		end
-		return t
-end
-local function get_max_lag()
-	local status = minetest.get_server_status()
-	if not status then
-		return 0
-	end
-		local arrayoutput = explode(", ",status)
-		local arrayoutput2 = explode("=",arrayoutput[4])
-		return arrayoutput2[1]
-end
-
 local timer = 0
 local last_call_t = get_us_time()
 
@@ -48,5 +29,8 @@ minetest.register_globalstep(function()
 	timer=0
 
 	-- executed every few seconds
-	avg_metric.set( tonumber(get_max_lag()) )
+	local current_lag = minetest.get_server_max_lag()
+	if current_lag then
+		avg_metric.set(current_lag)
+	end
 end)
